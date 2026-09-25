@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.40.2](https://github.com/plastic-karma/obsidian-git/releases/tag/2.40.2) (2026-09-25)
+
+### Desktop upgrade credential handling
+
+* Stop copying legacy tokens from plugin settings into plugin local storage on desktop.
+* Skip legacy browser-password relocation on desktop while still migrating non-secret settings.
+* Preserve both credential migrations on mobile.
+* Verify an upgrade from legacy settings in running Obsidian and add regression coverage for desktop/mobile storage migration.
+
 ## [2.40.1](https://github.com/plastic-karma/obsidian-git/releases/tag/2.40.1) (2026-09-25)
 
 ### Native authentication fork

@@ -13,7 +13,7 @@ On desktop, this fork invokes your installed Git and leaves authentication to it
 
 First confirm that `git fetch` and your normal push work from a terminal in the vault. Obsidian must have access to the same Git executable, helper and environment. A desktop launcher may not inherit shell-only environment variables; launch Obsidian from the working session or set the existing additional PATH/environment options and reload the plugin. Do not enter passwords or tokens into those options. Complete interactive login and SSH host-key verification in the terminal first.
 
-Restart Obsidian after replacing the upstream plugin so its old credential watcher is no longer running. This fork does not delete previously generated files or erase credentials stored by earlier versions; it simply stops creating and using the desktop credential bridge.
+Restart Obsidian after replacing the upstream plugin so its old credential watcher is no longer running. As of 2.40.2, desktop startup does not copy legacy tokens from settings or browser storage into plugin credential storage. The obsolete `username` field is removed from settings during migration, while older browser credential entries and generated files are left untouched. Mobile credential migration is preserved.
 
 This change does not apply to mobile: Android/iOS retain the upstream JavaScript Git backend and credential storage because local Git commands are unavailable there.
 

@@ -1,6 +1,6 @@
 {
     "name": "obsidian-git",
-    "version": "2.40.1",
+    "version": "2.40.2",
     "description": "Obsidian Git fork using system Git authentication on desktop without plugin password prompts.",
     "main": "main.js",
     "scripts": {

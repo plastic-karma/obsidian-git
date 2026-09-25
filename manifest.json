@@ -6,5 +6,5 @@
     "description": "Git version control using your system Git authentication on desktop, without plugin password prompts.",
     "isDesktopOnly": false,
     "fundingUrl": "https://ko-fi.com/vinzent",
-    "version": "2.40.1"
+    "version": "2.40.2"
 }

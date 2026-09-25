@@ -19,6 +19,8 @@ export class LocalStorageSettings {
             "pluginDisabled",
         ];
         for (const key of keys) {
+            // Desktop credentials belong to Git; do not relocate legacy secrets.
+            if (key === "password" && this.plugin.useSimpleGit) continue;
             const old = localStorage.getItem(this.prefix + key);
             if (
                 this.app.loadLocalStorage(this.prefix + key) == null &&
