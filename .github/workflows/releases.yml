@@ -18,14 +18,17 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v7
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
             - uses: pnpm/action-setup@v6
               with:
-                  version: latest
+                  version: 11
             - name: Build
               id: build
               run: |
-                  pnpm install
-                  pnpm run build --if-present
+                  pnpm install --frozen-lockfile
+                  pnpm run build
                   mkdir ${{ env.PLUGIN_NAME }}
                   cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
                   zip -r ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.zip ${{ env.PLUGIN_NAME }}
