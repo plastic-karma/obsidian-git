@@ -40,9 +40,7 @@ function configurePlugin(
         ...plugin.localStorage,
         getGitPath: () => null,
         getPATHPaths: () => [],
-        // Supplying an askpass command keeps setGitInstance focused on client
-        // initialization instead of starting the plugin's long-lived watcher.
-        getEnvVars: () => ["SSH_ASKPASS=obsidian-git-test-askpass"],
+        getEnvVars: () => [],
     } as unknown as FakePlugin["localStorage"];
     (
         plugin.app as unknown as {

@@ -7,14 +7,10 @@ import { resolve, sep } from "path";
 import type * as simple from "simple-git";
 import simpleGit, { GitError, CleanOptions } from "simple-git";
 import {
-    ASK_PASS_INPUT_FILE,
-    ASK_PASS_SCRIPT,
-    ASK_PASS_SCRIPT_FILE,
     DEFAULT_WIN_GIT_PATH,
     GIT_LINE_AUTHORING_MOVEMENT_DETECTION_MINIMAL_LENGTH,
 } from "src/constants";
 import type { LineAuthorFollowMovement } from "src/editor/lineAuthor/model";
-import { GeneralModal } from "src/ui/modals/generalModal";
 import type ObsidianGit from "../main";
 import type {
     Blame,
@@ -33,7 +29,6 @@ import { GitManager } from "./gitManager";
 export class SimpleGit extends GitManager {
     git!: simple.SimpleGit;
     absoluteRepoPath!: string;
-    watchAbortController: AbortController | undefined;
     useDefaultWindowsGitPath: boolean = false;
     constructor(plugin: ObsidianGit) {
         super(plugin);
@@ -106,10 +101,12 @@ export class SimpleGit extends GitManager {
                 envs["GIT_WORK_TREE"] = basePath;
             }
             for (const envVar of envVars) {
-                const [key, value] = envVar.split("=");
-                if (key === undefined) continue;
-                envs[key] = value;
+                const separator = envVar.indexOf("=");
+                if (separator <= 0) continue;
+                envs[envVar.slice(0, separator)] = envVar.slice(separator + 1);
             }
+            // Desktop Git has no interactive terminal; keep explicit overrides.
+            envs["GIT_TERMINAL_PROMPT"] ??= "0";
 
             const SIMPLE_GIT_NAMESPACE = "simple-git";
             const NAMESPACE_SEPARATOR = ",";
@@ -132,35 +129,6 @@ export class SimpleGit extends GitManager {
 
                 this.absoluteRepoPath = absoluteRoot;
                 await this.git.cwd(absoluteRoot);
-            }
-
-            const absolutePluginConfigPath = path.join(
-                vaultBasePath,
-                this.app.vault.configDir,
-                "plugins",
-                "obsidian-git"
-            );
-            const askPassPath = path.join(
-                absolutePluginConfigPath,
-                ASK_PASS_SCRIPT_FILE
-            );
-
-            if (envs["SSH_ASKPASS"] == undefined) {
-                envs["SSH_ASKPASS"] = askPassPath;
-            }
-
-            // OpenSSH requires DISPLAY variable to be set for SSH_ASKPASS to
-            // detect a graphical environment. This is not the case for e.g.
-            // Windows. Setting SSH_ASKPASS_REQUIRE to "force" makes it use
-            // SSH_ASKPASS even without DISPLAY, which allows the askpass script
-            // to work on Windows as well.
-            envs["SSH_ASKPASS_REQUIRE"] = "force";
-            envs["OBSIDIAN_GIT_CREDENTIALS_INPUT"] = path.join(
-                absolutePluginConfigPath,
-                ASK_PASS_INPUT_FILE
-            );
-            if (envs["SSH_ASKPASS"] == askPassPath) {
-                this.askpass().catch((e) => this.plugin.displayError(e));
             }
 
             envs["OBSIDIAN_GIT"] = "1";
@@ -233,158 +201,8 @@ export class SimpleGit extends GitManager {
         return filePath;
     }
 
-    private get absPluginConfigPath(): string {
-        const adapter = this.app.vault.adapter as FileSystemAdapter;
-        const vaultPath = adapter.getBasePath();
-        return path.join(
-            vaultPath,
-            this.app.vault.configDir,
-            "plugins",
-            "obsidian-git"
-        );
-    }
-
     private get relPluginConfigPath(): string {
         return path.join(this.app.vault.configDir, "plugins", "obsidian-git");
-    }
-    async askpass(): Promise<void> {
-        const adapter = this.app.vault.adapter as FileSystemAdapter;
-        const relPluginConfigDir =
-            this.app.vault.configDir + "/plugins/obsidian-git/";
-
-        await this.addAskPassScriptToExclude();
-
-        await fsPromises.writeFile(
-            path.join(this.absPluginConfigPath, ASK_PASS_SCRIPT_FILE),
-            ASK_PASS_SCRIPT
-        );
-        await fsPromises.chmod(
-            path.join(this.absPluginConfigPath, ASK_PASS_SCRIPT_FILE),
-            0o755
-        );
-        this.watchAbortController = new AbortController();
-        const { signal } = this.watchAbortController;
-        try {
-            const watcher = fsPromises.watch(this.absPluginConfigPath, {
-                signal,
-            });
-
-            for await (const event of watcher) {
-                if (event.filename != ASK_PASS_INPUT_FILE) continue;
-                const triggerFilePath =
-                    relPluginConfigDir + ASK_PASS_INPUT_FILE;
-
-                // Wait a bit to ensure the file is fully removed
-                await new Promise((res) => window.setTimeout(res, 200));
-                if (!(await adapter.exists(triggerFilePath))) continue;
-
-                const data = await adapter.read(triggerFilePath);
-                let notice: Notice | undefined;
-                // The text is too long for the modal, so a notice is shown instead
-                if (data.length > 60) {
-                    notice = new Notice(data, 999_999);
-                }
-                let obscure = true;
-
-                // This does only work for English output.
-                // There is no general way detect the type of input asked for.
-                // We could enfore english output, but that is not beneficial
-                // for the user either.
-                if (data.contains("Username for")) {
-                    obscure = false;
-                }
-                const response = await new GeneralModal(this.plugin, {
-                    allowEmpty: true,
-                    obscure,
-                    placeholder:
-                        data.length > 60
-                            ? "Enter a response to the message."
-                            : data,
-                }).openAndGetResult();
-                notice?.hide();
-
-                // Just in case the trigger file was removed while the modal was open
-                if (await adapter.exists(triggerFilePath)) {
-                    await adapter.write(
-                        `${triggerFilePath}.response`,
-                        response ?? ""
-                    );
-                }
-            }
-        } catch (error) {
-            this.plugin.displayError(error);
-            await fsPromises.rm(
-                path.join(this.absPluginConfigPath, ASK_PASS_SCRIPT_FILE),
-                { force: true }
-            );
-            await fsPromises.rm(
-                path.join(
-                    this.absPluginConfigPath,
-                    `${ASK_PASS_SCRIPT_FILE}.response`
-                ),
-                { force: true }
-            );
-            await new Promise((res) => window.setTimeout(res, 5000));
-            this.plugin.log("Retry watch for ask pass");
-            await this.askpass();
-        }
-    }
-
-    /**
-     * Adds the askpass script to the exclude file of the git repository.
-     *
-     * This prevents the script from being tracked by git. This should be no
-     * problem as the script does not contain any sensitive data, but may
-     * cause issues with file permissions on other devices.
-     * See https://github.com/Vinzent03/obsidian-git/issues/903
-     */
-    async addAskPassScriptToExclude(): Promise<void> {
-        try {
-            if (!(await this.git.checkIsRepo())) {
-                return;
-            }
-            const absoluteExcludeFilePath = await this.git.revparse([
-                "--path-format=absolute",
-                "--git-path",
-                "info/exclude",
-            ]);
-
-            const vaultRelativeAskPassScriptFile = path.join(
-                this.app.vault.configDir,
-                "plugins",
-                "obsidian-git",
-                ASK_PASS_SCRIPT_FILE
-            );
-            const repoRelativeAskPassScriptFile = this.getRelativeRepoPath(
-                vaultRelativeAskPassScriptFile,
-                true
-            );
-
-            const content = await fsPromises.readFile(
-                absoluteExcludeFilePath,
-                "utf-8"
-            );
-            const lines = content.split("\n");
-            const contains = lines.some((line) =>
-                line.contains(repoRelativeAskPassScriptFile)
-            );
-            if (!contains) {
-                await fsPromises.appendFile(
-                    absoluteExcludeFilePath,
-                    repoRelativeAskPassScriptFile + "\n"
-                );
-            }
-        } catch (error) {
-            // Catch any errors, because this is not critical
-            console.error(
-                "Error while adding askpass script to exclude file:",
-                error
-            );
-        }
-    }
-
-    unload(): void {
-        this.watchAbortController?.abort();
     }
 
     async status(opts?: { path?: string }): Promise<Status> {

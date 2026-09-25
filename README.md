@@ -1,6 +1,22 @@
-# Obsidian Git Plugin
+# Obsidian Git — Native Auth Fork
 
 A powerful community plugin for [Obsidian.md](https://obsidian.md) that brings Git integration right into your vault. Automatically commit, pull, push, and see your changes — all within Obsidian.
+
+## Install this fork with BRAT
+
+This fork of [Vinzent03/obsidian-git](https://github.com/Vinzent03/obsidian-git) leaves desktop authentication to your local Git installation. It does not install the upstream password-prompt script, force SSH askpass behavior, or write desktop password responses into your vault.
+
+1. Install and enable **BRAT** from Obsidian's community plugins.
+2. In BRAT, choose **Add beta plugin** and enter `plastic-karma/obsidian-git`.
+3. Install the latest release and restart Obsidian. The plugin appears as **Git (Native Auth)**.
+
+This is an in-place replacement: the plugin ID remains `obsidian-git`, preserving existing settings and command IDs. Disable an existing Git installation before adding this fork; do not uninstall it if you want to keep its settings. Let BRAT manage updates for this plugin, rather than updating Git from the community catalog, which would replace the fork with upstream.
+
+Git must already be installed and authentication configured for the vault's remote. Existing credential helpers (including Git Credential Manager, `gh`, and OS keychains), SSH agents and externally configured askpass programs remain in control. The plugin does not start a login shell: Obsidian must inherit the relevant environment, especially `SSH_AUTH_SOCK`. If necessary, launch Obsidian from the working terminal session or use the plugin's existing additional PATH/environment settings. Do not put secrets in those settings.
+
+Without a working helper or agent, Git reports an authentication error instead of opening a plugin password modal. Terminal prompting defaults to disabled because Obsidian has no interactive terminal; an explicit `GIT_TERMINAL_PROMPT` setting is preserved.
+
+**Desktop only:** this authentication change applies to Windows, macOS and Linux. Mobile still uses upstream's isomorphic-git backend and its existing credential handling; it cannot run local Git. See the fork's [authentication guide](docs/Authentication.md) for details.
 
 ## 📚 Documentation
 
@@ -70,7 +86,7 @@ View line-by-line changes directly in the editor with added, modified, and delet
   - `Push`, `Pull`
   - `Edit remotes`: Add new remotes or edit existing remotes
   - `Remove remote`
-  - `Clone an existing remote repo`: Opens dialog that will prompt for URL and authentication to clone a remote repo
+  - `Clone an existing remote repo`: Opens a dialog for the remote URL; desktop authentication is handled by system Git
   - `Open file on GitHub`: Open the file view of the current file on GitHub in a browser window. Note: only works on desktop
   - `Open file history on GitHub`: Open the file history of the current file on GitHub in a browser window. Note: only works on desktop
 - 🏠 Manage local repository
@@ -88,7 +104,7 @@ View line-by-line changes directly in the editor with added, modified, and delet
 
 ### 🔐 Authentication
 
-Some Git services may require further setup for HTTPS/SSH authentication. Refer to the [Authentication Guide](https://publish.obsidian.md/git-doc/Authentication)
+Desktop authentication uses your existing Git configuration. Refer to this fork's [Authentication Guide](docs/Authentication.md).
 
 ### Obsidian on Linux
 

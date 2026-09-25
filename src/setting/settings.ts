@@ -842,6 +842,13 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
                     })
             );
 
+        if (plugin.useSimpleGit)
+            new Setting(containerEl)
+                .setName("System Git authentication")
+                .setDesc(
+                    "Desktop Git commands use your configured credential helpers, SSH agent and external askpass programs. This fork does not prompt for or store desktop Git passwords. Authenticate in a terminal first; Obsidian must have access to the same helper or agent."
+                );
+
         if (plugin.gitManager instanceof IsomorphicGit) {
             new Setting(containerEl)
                 .setName("Authentication/commit author")

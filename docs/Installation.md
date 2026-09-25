@@ -8,15 +8,22 @@ aliases:
 
 ## Plugin installation
 
-### From within Obsidian
-Go to "Settings" -> "Community plugins" -> "Browse", search for "Git", install and enable it.
+### With BRAT (this fork)
+1. Install and enable BRAT from Obsidian's community plugins.
+2. Disable an existing Git plugin before replacing it. Do not uninstall it if you want to keep its settings.
+3. In BRAT, select **Add beta plugin** and enter `plastic-karma/obsidian-git`.
+4. Install the latest release and restart Obsidian.
+5. Enable **Git (Native Auth)** if it is not already enabled.
+
+The fork retains the `obsidian-git` plugin ID and replaces the upstream installation in place. Keep using BRAT for updates; installing/updating Git from the community catalog restores the upstream plugin.
 
 ### Manual
-1. Download `obsidian-git-<latest-version>.zip` from the [latest release](https://github.com/Vinzent03/obsidian-git/releases/latest)
-2. Unpack the zip in `<vault>/.obsidian/plugins/obsidian-git`
-3. Restart Obsidian
-4. Go to settings and disable restricted mode
-5. Enable `Git`
+1. Download `main.js`, `manifest.json` and `styles.css` from the [latest fork release](https://github.com/plastic-karma/obsidian-git/releases/latest).
+2. Place all three files in `<vault>/.obsidian/plugins/obsidian-git`.
+3. Restart Obsidian.
+4. Disable restricted mode in settings and enable **Git (Native Auth)**.
+
+Desktop authentication uses your existing Git credential helpers and SSH agent, not a plugin password dialog. Follow the [authentication guide](Authentication.md). Mobile retains upstream's separate JavaScript Git and credential handling.
 
 # Windows
 

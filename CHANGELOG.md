@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.40.1](https://github.com/plastic-karma/obsidian-git/releases/tag/2.40.1) (2026-09-25)
+
+### Native authentication fork
+
+* Desktop Git now delegates authentication exclusively to system Git configuration, credential helpers, SSH agents and external askpass programs.
+* Removed the plugin's askpass script, credential-response files, password modal bridge, background watcher and associated Git exclude-file edits.
+* Preserve external SSH askpass policy instead of forcing GUI prompts. Disable terminal prompting only when no explicit value is configured.
+* Preserve equals signs in additional environment values, including values used by external authentication programs.
+* Publish BRAT-compatible release assets under `plastic-karma/obsidian-git`, retaining the `obsidian-git` plugin ID for in-place installation.
+* Mobile authentication is unchanged. Restart Obsidian after upgrading from upstream; old generated files are not deleted automatically.
+
 ## [2.40.0](https://github.com/Vinzent03/obsidian-git/compare/2.39.0...2.40.0) (2026-09-17)
 
 

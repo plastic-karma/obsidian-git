@@ -1,10 +1,10 @@
 {
-    "author": "Vinzent",
-    "authorUrl": "https://github.com/Vinzent03",
+    "author": "Vinzent (upstream), plastic-karma (native auth fork)",
+    "authorUrl": "https://github.com/plastic-karma/obsidian-git",
     "id": "obsidian-git",
-    "name": "Git",
-    "description": "Integrate Git version control with automatic backup and other advanced features.",
+    "name": "Git (Native Auth)",
+    "description": "Git version control using your system Git authentication on desktop, without plugin password prompts.",
     "isDesktopOnly": false,
     "fundingUrl": "https://ko-fi.com/vinzent",
-    "version": "2.40.0"
+    "version": "2.40.1"
 }
